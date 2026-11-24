@@ -27,5 +27,5 @@ def process(material, stage='archive'):
     result['blend'] = select(plan, lots)
     if stage == 'blend':
         return result
-    result['stock'] = reconcile(plan, lots, result['blend'])
+    result['stock'] = reconcile(plan, lots, result['blend'], material)
     return result

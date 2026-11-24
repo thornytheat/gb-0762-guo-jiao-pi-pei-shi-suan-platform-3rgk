@@ -38,6 +38,15 @@ def write(root, record):
 
 
 def history(root):
+    entries = []
     paths = sorted(Path(root).glob('*.json'), key=lambda path: path.stat().st_mtime_ns, reverse=True)[:50]
-    return [{key: record[key] for key in ('batch_id', 'rule', 'created_at', 'elapsed_ms')}
-            for record in (read(root, path.stem) for path in paths)]
+    for path in paths:
+        # The archive directory may also contain the mutable stock ledger.
+        if not re.fullmatch('[a-f0-9]{64}', path.stem):
+            continue
+        try:
+            record = read(root, path.stem)
+            entries.append({key: record[key] for key in ('batch_id', 'rule', 'created_at', 'elapsed_ms')})
+        except (TrialError, KeyError):
+            continue
+    return entries

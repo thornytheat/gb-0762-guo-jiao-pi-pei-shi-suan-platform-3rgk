@@ -19,9 +19,8 @@ def from_request():
         raise TrialError('JSON_REQUIRED', 400)
     if 'sample' in body:
         materials = load(body['sample'])
-        if set(body) - {'sample', 'plan', 'proposal'}:
-            raise TrialError('UNKNOWN_REQUEST_FIELD', 400)
-        return {**materials, **{k: v for k, v in body.items() if k != 'sample'}}
-    if set(body) - {'assays', 'plan', 'proposal'} or not isinstance(body.get('assays'), str):
+        overrides = {key: value for key, value in body.items() if key != 'sample'}
+        return {**materials, **overrides}
+    if not isinstance(body.get('assays'), str):
         raise TrialError('ASSAYS_REQUIRED', 400)
     return body

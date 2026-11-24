@@ -5,6 +5,34 @@
   {% if stock %}<div class="remaining"><div>期初 {{ stock.begin_g }} g</div><div class="meter" title="领用 {{ stock.issued_g }} g，余量 {{ stock.end_g }} g"><meter min="0" max="{{ stock.begin_g or 1 }}" value="{{ stock.issued_g }}"></meter></div><div>余量 {{ stock.end_g }} g</div></div><p class="quantity">领用 {{ stock.issued_g }} g · 缺口 {{ stock.shortage_g }} g</p>{% endif %}
   <details id="blend-proof"><summary>展开配方校验</summary><dl class="equations"><dt>可分配整步库存</dt><dd>{{ blend.step_capacity_g }} g</dd><dt>搜索状态数</dt><dd>{{ blend.visited }}</dd><dt>干物凝胶矩</dt><dd>{{ blend.gel_moment or '—' }}</dd></dl></details>
 </section>
+{% if stock %}
+<section class="panel atp-panel" data-testid="available-to-promise">
+  <h3>可领量和待核原因</h3>
+  <dl class="kpis">
+    <div><dt>可领量 (g)</dt><dd id="available-g" class="available-g" data-field="available_g">{{ stock.available_g }}</dd></div>
+    <div><dt>本单可放 (g)</dt><dd data-field="release_g">{{ stock.release_g }}</dd></div>
+    <div><dt>待核上限 (g)</dt><dd data-field="pending_hold_g">{{ stock.pending_hold_g }}</dd></div>
+    <div><dt>回执补扣 (g)</dt><dd data-field="receipt_deducted_g">{{ stock.receipt_deducted_g }}</dd></div>
+    <div><dt>其他留档预留 (g)</dt><dd data-field="reserved_g">{{ stock.reserved_g }}</dd></div>
+    <div><dt>放料后可领 (g)</dt><dd data-field="available_after_issue_g">{{ stock.available_after_issue_g }}</dd></div>
+  </dl>
+  <div class="pending-reasons" id="pending-reasons" data-testid="pending-reasons">
+    <h4>待核原因</h4>
+    <ul>
+      {% for reason in stock.pending_reason_details %}
+      <li data-code="{{ reason.code }}" data-lot="{{ reason.lot or '' }}">
+        <strong>{{ reason.code }}</strong> · {{ reason.message }}
+        {% if reason.lot %}（{{ reason.lot }}）{% endif %}
+        {% if reason.hold_g %}<span class="hold">上限预留 {{ reason.hold_g }} g</span>{% endif %}
+        {% if reason.deducted_g %}<span class="deducted">已补扣 {{ reason.deducted_g }} g</span>{% endif %}
+      </li>
+      {% else %}
+      <li data-empty="true">暂无待核原因。</li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+{% endif %}
 <section class="panel"><h3>{{ '批次用料证据' if stage == 'blend' else '库存核销明细' }}</h3><div class="sheet"><table>
 {% if stock %}<thead><tr><th>批号</th><th>原件行</th><th>期初 (g)</th><th>领用 (g)</th><th>期末 (g)</th><th>原因</th></tr></thead><tbody>{% for lot in stock.rows %}<tr data-issued="{{ lot.issued_g > 0 }}"><td>{{ lot.lot }}</td><td>{{ lot.line }}</td><td class="num">{{ lot.begin_g }}</td><td class="num">{{ lot.issued_g }}</td><td class="num">{{ lot.end_g }}</td><td>{{ lot.code }}</td></tr>{% else %}<tr><td colspan="6">补充化验批次后再试。</td></tr>{% endfor %}</tbody>
 {% else %}<thead><tr><th>批号</th><th>原件行</th><th>到期日</th><th>领用 (g)</th><th>凝胶 (毫 SAG)</th></tr></thead><tbody>{% for lot in data.dry.lots if lot.lot in blend.allocation %}<tr><td>{{ lot.lot }}</td><td>{{ lot.line }}</td><td>{{ lot.expires }}</td><td class="num">{{ blend.allocation[lot.lot] }}</td><td class="num">{{ lot.gel_msag }}</td></tr>{% else %}<tr><td colspan="5">调整约束后重新试算。</td></tr>{% endfor %}</tbody>{% endif %}

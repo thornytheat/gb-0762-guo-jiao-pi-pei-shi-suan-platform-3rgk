@@ -8,3 +8,4 @@
 
 - [模块与复算](docs/DEPTH.md)
 - [数据定义](docs/DATA-DICTIONARY.md)
+- [盘点放料与幂等预留](docs/RELEASE-LEDGER.md)

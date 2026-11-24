@@ -15,7 +15,10 @@ def create_app(archive=None):
 
     @app.errorhandler(TrialError)
     def invalid(error):
-        return {'code': error.code}, error.status
+        payload = {'code': error.code}
+        if getattr(error, 'violations', None):
+            payload['violations'] = error.violations
+        return payload, error.status
 
     @app.get('/healthz')
     def health():
